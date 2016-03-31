@@ -20,6 +20,8 @@ public class GameController : MonoBehaviour {
 		public float scroll_speed;
 		public float fall_delay = 1f;
 		public float fall_speed = 1f;
+
+		public Transform holder;
 	}
 
 	[Serializable]
@@ -35,6 +37,13 @@ public class GameController : MonoBehaviour {
 		public float spawn_start_wait;
 
 		public float fall_speed;
+
+		public Transform holder;
+
+		public float min_size;
+		public float max_size;
+
+		public AudioSource falling_sound;
 	}
 
 	[Serializable]
@@ -45,20 +54,10 @@ public class GameController : MonoBehaviour {
 
 		public int damage;
 	}
-
-	[Serializable]
-	public class CloundSettings
-	{
-		public float scroll_speed;
-		public float scroll_range;
-
-		public int damage;
-	}
-
+		
 	[Serializable]
 	public class PlayerSettings
 	{
-		public GameObject player;
 		public int hp = 100;
 		public float move_force = 365f;
 		public float max_speed = 5f;
@@ -66,111 +65,60 @@ public class GameController : MonoBehaviour {
 		public float scale_rate = 0.25f;
 	}
 
+	[Serializable]
+	public class ErruptionSettings
+	{
+		public float min_spawn_rate;
+		public float max_spawn_wait;
+		public ParticleSystem ps;
+		public AudioSource erruption_sound;
+	}
+
 	//settings
 	public PlayerSettings player_settings;
 	public PlatformSettings platform_settings;
 	public FallingSettings falling_settings;
 	public LavaSettings lava_settings;
+	public ErruptionSettings erruption_settings;
+
 	public float scroll_speed;
 
 	public static GameController instance = null;
 
-	//privates
-	private bool play_game;
-	private bool game_start;
-	private bool game_over;
-
-	private Transform platforms_holder;
-	private Transform fallings_holder;
-
-	private ParticleSystem erruption;
-	private ParticleSystem ashes;
-	private ParticleSystem clounds;
-
-	private GameObject blockImage;
-	private GameObject game_over_image;
-
-	private Text message_text;
-
-	private GameObject map;
-
 	[HideInInspector]
 	public int score;
 
-	void Awake() {
-		if (instance == null) {
-			instance = this;
-		} else if (instance != this) {
-			Destroy(gameObject);
-		}
-			    
-		DontDestroyOnLoad(gameObject);
-
-		ShowGameMap (false);
-		ShowMainMenuUI (true);
+	void Awake(){
+		instance = this;
 	}
-		
+
 	void Start () {
-		play_game = false;
-		score = player_settings.hp;
-	}
-
-	void OnLevelWasLoaded(int level) {
-		score = player_settings.hp;
-
-		ShowMainMenuUI (false);
-		ShowIntroductionUI (true);
-		ShowInGameUI (true);
-		ShowGameMap (true);
 		InitGame ();
 	}
 
 	public void InitGame(){
-		GetReference ();
-
-		game_start = false;
-		game_over = false;
-
-		message_text.text = "Welcome To The Olympus!\n\n" +
-		"The world was ruined by the violent volcano.\n" +
-		"Please help the rock hero - Osamus \nto escape from this chaotic place.";
+		score = player_settings.hp;
 
 		GameObject toInstantiate = platform_settings.platforms [0];
-		(Instantiate (toInstantiate, new Vector3(-6.5f, -7.5f, 0), Quaternion.identity) as GameObject).gameObject.transform.SetParent(platforms_holder.transform);
-		(Instantiate (toInstantiate, new Vector3(0f, -7.5f, 0), Quaternion.identity) as GameObject).gameObject.transform.SetParent(platforms_holder.transform);
-		(Instantiate (toInstantiate, new Vector3(6.5f, -7.5f, 0), Quaternion.identity) as GameObject).gameObject.transform.SetParent(platforms_holder.transform);
-		(Instantiate (toInstantiate, new Vector3(13f, -7.5f, 0), Quaternion.identity) as GameObject).gameObject.transform.SetParent(platforms_holder.transform);
+		(Instantiate (toInstantiate, new Vector3(-6.5f, platform_settings.spawn_y, 0), Quaternion.identity) as GameObject).gameObject.transform.SetParent(platform_settings.holder);
+		(Instantiate (toInstantiate, new Vector3(0f, platform_settings.spawn_y, 0), Quaternion.identity) as GameObject).gameObject.transform.SetParent(platform_settings.holder);
+		(Instantiate (toInstantiate, new Vector3(6.5f, platform_settings.spawn_y, 0), Quaternion.identity) as GameObject).gameObject.transform.SetParent(platform_settings.holder);
+		(Instantiate (toInstantiate, new Vector3(13f, platform_settings.spawn_y, 0), Quaternion.identity) as GameObject).gameObject.transform.SetParent(platform_settings.holder);
 
-		game_over_image.SetActive (false);
-
-		GameObject[] p = GameObject.FindGameObjectsWithTag ("Player");
-		if (p.Length ==  0) {
-			Instantiate (player_settings.player, new Vector3 (0.0f, 5.0f, 0.0f), Quaternion.identity);
-		} else {
-			Destroy (p [0]);
-			Instantiate (player_settings.player, new Vector3 (0.0f, 5.0f, 0.0f), Quaternion.identity);
-		}
+		StartCoroutine (SpawnPlatforms ());
+		StartCoroutine (SpawnFallings ());
+		StartCoroutine (Erruption ());
 	}
 
-	public void GetReference(){
-		platforms_holder = GameObject.Find ("Platforms").transform;
-		foreach (Transform child in platforms_holder.transform) {
-			GameObject.Destroy (child.gameObject);
+	IEnumerator Erruption() {
+		while(true) {
+			erruption_settings.erruption_sound.Play ();
+			erruption_settings.ps.Play ();
+
+			float r = Random.Range (erruption_settings.min_spawn_rate, erruption_settings.max_spawn_wait);
+
+			yield return new WaitForSeconds (r);
 		}
-
-		fallings_holder = GameObject.Find ("Fallings").transform;
-		foreach (Transform child in fallings_holder.transform) {
-			GameObject.Destroy (child.gameObject);
-		}
-
-		erruption = GameObject.Find ("Erruption").GetComponent<ParticleSystem> ();
-		ashes = GameObject.Find ("Ashes").GetComponent<ParticleSystem> ();
-		clounds = GameObject.Find ("Clounds").GetComponent<ParticleSystem> ();
-
-		blockImage = GameObject.Find ("Block Image");
-		game_over_image = GameObject.Find ("Game Over Image");
-
-		message_text = GameObject.Find ("Message Text").GetComponent<Text>();
 	}
 
 	IEnumerator SpawnPlatforms() {
@@ -182,13 +130,9 @@ public class GameController : MonoBehaviour {
 
 			GameObject toInstantiate = platform_settings.platforms[Random.Range(0, platform_settings.platforms.Length)];
 			GameObject instance = Instantiate (toInstantiate, spawnPosition, Quaternion.identity) as GameObject;
-			instance.transform.SetParent (platforms_holder);
+			instance.transform.SetParent (platform_settings.holder);
 
 			yield return new WaitForSeconds (Random.Range(platform_settings.spawn_min_wait, platform_settings.spawn_max_wait));
-
-			if (!CanUpdate()) {
-				break;
-			}
 		}
 	}
 
@@ -196,124 +140,32 @@ public class GameController : MonoBehaviour {
 		yield return new WaitForSeconds (falling_settings.spawn_start_wait);
 
 		while (true) {
+			falling_settings.falling_sound.Play ();
 			for (int i = 0; i < falling_settings.max_spawn; i++) {
 				Vector2 spawnPosition = new Vector2(Random.Range(-falling_settings.spawn_x, falling_settings.spawn_x), falling_settings.spawn_y);
 				GameObject toInstantiate = falling_settings.fallings[Random.Range(0, falling_settings.fallings.Length)];
 
 				GameObject instance = Instantiate (toInstantiate, spawnPosition, Quaternion.identity) as GameObject;
-				instance.transform.SetParent (fallings_holder);
+				instance.transform.SetParent (falling_settings.holder);
 
+				//increase additional falling size by random
+				float r = Random.Range (falling_settings.min_size, falling_settings.max_size);
+				instance.transform.localScale = new Vector3 (instance.transform.localScale.x + r,
+					instance.transform.localScale.y + r, 0);
+				//increase damage
+				FallingController fc = instance.transform.GetComponent<FallingController>();
+				fc.damage = fc.damage + (int)(fc.damage * r);
 				yield return new WaitForSeconds (falling_settings.spawn_rate);
-
-				if (!CanUpdate()) {
-					break;
-				}
 			}
 
 			yield return new WaitForSeconds (falling_settings.spawn_wait);
-
-			if (!CanUpdate()) {
-				break;
-			}
 		}
-	}
-
-	void Update(){
-		if (play_game) {
-			bool b;
-			//#if UNITY_STANDALONE || UNITY_WEBPLAYER
-				b = Input.GetKeyDown (KeyCode.R);
-			//#else
-			//	b = Input.touchCount > 0 ? true : false;
-			//#endif
-
-			if(!game_start && b){
-				message_text.text = "";
-				game_start = true;
-
-				erruption.Play ();
-				ashes.Play ();
-				clounds.Play ();
-
-				StartCoroutine (SpawnPlatforms ());
-				StartCoroutine (SpawnFallings ());
-
-				blockImage.SetActive (false);
-				ShowIntroductionUI (false);
-			}
-
-			if(game_over && b){
-				SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-			}
-		}
-	}
-
-
-	public bool CanUpdate(){
-		return game_start && !game_over;
 	}
 
 	public void GameOver() {
-		game_over = true;
-		message_text.text = "\n\n\n\nYou are incinerated.\n" + 
-			"You grow until " + score;
+		ScoreController.instance.UpdateScore (score);
 
-		blockImage.SetActive (true);
-		game_over_image.SetActive (true);
-	}
-
-	public void PlayGame(bool b){
-		play_game = b;
-		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-	}
-
-	public void ShowMainMenuUI(bool b){
-		GameObject obj = GameObject.Find ("MainMenu UI");
-
-		foreach (Transform child in obj.GetComponentsInChildren<Transform>(true)) {
-			child.gameObject.SetActive (b);
-		}
-		obj.SetActive (true);
-	}
-
-	public void ShowInstructionUI(bool b){
-		GameObject obj = GameObject.Find ("Instruction UI");
-
-		foreach (Transform child in obj.GetComponentsInChildren<Transform>(true)) {
-			child.gameObject.SetActive (b);
-		}
-		obj.SetActive (true);
-	}
-		
-	public void ShowIntroductionUI(bool b){
-		GameObject obj = GameObject.Find ("Introduction UI");
-
-		foreach (Transform child in obj.GetComponentsInChildren<Transform>(true)) {
-			child.gameObject.SetActive (b);
-		}
-		obj.SetActive (true);
-	}
-
-	public void ShowInGameUI(bool b){
-		GameObject obj = GameObject.Find ("InGame UI");
-
-		foreach (Transform child in obj.GetComponentsInChildren<Transform>(true)) {
-			child.gameObject.SetActive (b);
-		}
-		obj.SetActive (true);
-	}
-		
-	public void ShowGameMap(bool b){
-		GameObject obj = GameObject.Find ("GameMap");
-
-		foreach (Transform child in obj.GetComponentsInChildren<Transform>(true)) {
-			child.gameObject.SetActive (b);
-		}
-		obj.SetActive (true);
-	}
-
-	public void ExitGame(){
-		Application.Quit();
+		SceneManager.LoadScene("GameOver");
 	}
 
 	public void PlayerMoveRight(){
