@@ -12,6 +12,9 @@ public class PlayerController : MonoBehaviour {
 	private bool grounded;
 	private bool burning;
 
+	private bool move_right;
+	private bool move_left;
+
 	[HideInInspector]
 	public int hp;
 
@@ -28,6 +31,9 @@ public class PlayerController : MonoBehaviour {
 		jump = false;
 		grounded = false;
 		burning = false;
+
+		move_right = false;
+		move_left = false;
 
 		hp_text = GameObject.Find ("HP Text").GetComponent<Text>();
 
@@ -49,7 +55,7 @@ public class PlayerController : MonoBehaviour {
 	}
 		
 	void FixedUpdate() {
-		//#if UNITY_STANDALONE || UNITY_WEBPLAYER
+		#if UNITY_STANDALONE || UNITY_WEBPLAYER
 		float h = Input.GetAxis ("Horizontal");
 		float max_speed = GameController.instance.player_settings.max_speed;
 		if (h * rb2d.velocity.x < max_speed) {
@@ -77,41 +83,49 @@ public class PlayerController : MonoBehaviour {
 			jump_sound.Stop ();
 			burning_sound.Stop ();
 		}
-		//#endif
+		#else
+
+		float max_speed = GameController.instance.player_settings.max_speed;
+		if(move_right){
+			if (rb2d.velocity.x < max_speed) {
+				float move_force = GameController.instance.player_settings.move_force;
+				rb2d.AddForce (Vector2.right * move_force);
+			}
+
+			if (Mathf.Abs (rb2d.velocity.x) > max_speed) {
+				rb2d.velocity = new Vector2 (Mathf.Sign (rb2d.velocity.x) * max_speed, rb2d.velocity.y);
+			}
+
+			if (!facingRight) {
+				Flip ();
+			}
+		}
+		else if(move_left){
+
+			if (-1 * rb2d.velocity.x < max_speed) {
+				float move_force = GameController.instance.player_settings.move_force;
+				rb2d.AddForce (Vector2.left * move_force);
+			}
+
+			if (Mathf.Abs (rb2d.velocity.x) > max_speed) {
+				rb2d.velocity = new Vector2 (Mathf.Sign (rb2d.velocity.x) * max_speed, rb2d.velocity.y);
+			}
+
+			if (facingRight) {
+				Flip ();
+			}
+		}
+		#endif
+
+
 	}
 
-	public void MoveRight(){
-		float max_speed = GameController.instance.player_settings.max_speed;
-
-		if (rb2d.velocity.x < max_speed) {
-			float move_force = GameController.instance.player_settings.move_force;
-			rb2d.AddForce (Vector2.right * move_force);
-		}
-
-		if (Mathf.Abs (rb2d.velocity.x) > max_speed) {
-			rb2d.velocity = new Vector2 (Mathf.Sign (rb2d.velocity.x) * max_speed, rb2d.velocity.y);
-		}
-
-		if (!facingRight) {
-			Flip ();
-		}
+	public void MoveRight(bool value) {
+		move_right = value;
 	}
 
-	public void MoveLeft(){
-		float max_speed = GameController.instance.player_settings.max_speed;
-
-		if (-1 * rb2d.velocity.x < max_speed) {
-			float move_force = GameController.instance.player_settings.move_force;
-			rb2d.AddForce (Vector2.left * move_force);
-		}
-
-		if (Mathf.Abs (rb2d.velocity.x) > max_speed) {
-			rb2d.velocity = new Vector2 (Mathf.Sign (rb2d.velocity.x) * max_speed, rb2d.velocity.y);
-		}
-
-		if (facingRight) {
-			Flip ();
-		}
+	public void MoveLeft(bool value) {
+		move_left = value;
 	}
 
 	public void Jump() {
