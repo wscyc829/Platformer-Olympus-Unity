@@ -11,4 +11,11 @@ public class SceneController : MonoBehaviour {
 	public void QuitGame(){
 		Application.Quit ();
 	}
+
+	public void PlayBGMusic(bool b){
+		GameObject bgm = GameObject.Find ("BGMController");
+		BGMController bgmc = bgm.GetComponent<BGMController> ();
+
+		bgmc.PlayBGMusic (b);
+	}
 }

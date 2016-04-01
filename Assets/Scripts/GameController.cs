@@ -165,6 +165,11 @@ public class GameController : MonoBehaviour {
 	public void GameOver() {
 		ScoreController.instance.UpdateScore (score);
 
+		GameObject bgm = GameObject.Find ("BGMController");
+		BGMController bgmc = bgm.GetComponent<BGMController> ();
+
+		bgmc.PlayBGMusic (true);
+
 		SceneManager.LoadScene("GameOver");
 	}
 }

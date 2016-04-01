@@ -116,8 +116,6 @@ public class PlayerController : MonoBehaviour {
 			}
 		}
 		#endif
-
-
 	}
 
 	public void MoveRight(bool value) {
