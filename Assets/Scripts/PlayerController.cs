@@ -22,6 +22,8 @@ public class PlayerController : MonoBehaviour {
 
 	private Rigidbody2D rb2d;
 
+	private static bool blinking;
+
 	void Awake () {
 		rb2d = GetComponent<Rigidbody2D>();
 	}
@@ -34,6 +36,8 @@ public class PlayerController : MonoBehaviour {
 
 		move_right = false;
 		move_left = false;
+
+		blinking = false;
 
 		hp_text = GameObject.Find ("HP Text").GetComponent<Text>();
 
@@ -167,6 +171,11 @@ public class PlayerController : MonoBehaviour {
 			int damage = coll.gameObject.GetComponent<LavaController> ().damage;
 
 			UpdateHP (damage);
+
+			if (!blinking) {
+				blinking = true;
+				StartCoroutine (DoBlinking ());
+			}
 		}
 	}
 
@@ -177,6 +186,13 @@ public class PlayerController : MonoBehaviour {
 
 			Destroy (other.gameObject);
 			bite_sound.Play ();
+
+			if (damage > 0) {
+				if (!blinking) {
+					blinking = true;
+					StartCoroutine (DoBlinking ());
+				}
+			}
 		}
 	}
 
@@ -198,5 +214,27 @@ public class PlayerController : MonoBehaviour {
 		}
 
 		hp_text.text = "" + hp;
+	}
+
+	IEnumerator DoBlinking(){
+		if (blinking) {
+			SpriteRenderer sr = GetComponent<SpriteRenderer> ();
+
+			sr.enabled = false;
+
+			yield return new WaitForSeconds (0.2f);
+
+			sr.enabled = true;
+
+			yield return new WaitForSeconds (0.2f);
+
+			sr.enabled = false;
+
+			yield return new WaitForSeconds (0.2f);
+
+			sr.enabled = true;
+
+			blinking = false;
+		}
 	}
 }

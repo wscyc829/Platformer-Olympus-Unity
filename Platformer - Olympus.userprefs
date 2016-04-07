@@ -1,10 +1,12 @@
 ﻿<Properties StartupItem="Assembly-CSharp.csproj">
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\ScrollerController.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\PlayerController.cs">
     <Files>
-      <File FileName="Assets\Scripts\ScrollerController.cs" Line="6" Column="2" />
-      <File FileName="Assets\Scripts\PlayerController.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\PlayerController.cs" Line="122" Column="9" />
+      <File FileName="Assets\Scripts\BGMController.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\ScrollerController.cs" Line="1" Column="1" />
       <File FileName="Assets\Scripts\GameController.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\SceneController.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
